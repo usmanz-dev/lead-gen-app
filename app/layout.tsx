@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toast";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { PageTransition } from "@/components/ui/page-transition";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,7 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="antialiased">
-        <Toaster>{children}</Toaster>
+        <Toaster>
+          <TooltipProvider>
+            <PageTransition>{children}</PageTransition>
+          </TooltipProvider>
+        </Toaster>
       </body>
     </html>
   );

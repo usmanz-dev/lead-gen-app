@@ -46,6 +46,13 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Animation timing tokens — see leadgen.md §11 "Animations". Nothing in
+     this app should animate slower than --duration-slow (400ms). */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @layer utilities {
@@ -56,88 +63,100 @@
 
 @layer base {
   :root {
-    /* LocalLeads AI brand tokens — see leadgen.md §11 Design System */
-    --background: oklch(0.985 0.002 247.839); /* #F9FAFB */
-    --foreground: oklch(0.208 0.042 265.755); /* near-black gray */
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.208 0.042 265.755);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.208 0.042 265.755);
-    --primary: oklch(0.511 0.234 274.001); /* #4F46E5 indigo */
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.968 0.007 247.896);
-    --secondary-foreground: oklch(0.279 0.041 260.031);
-    --muted: oklch(0.968 0.007 247.896);
-    --muted-foreground: oklch(0.554 0.046 257.417);
-    --accent: oklch(0.968 0.007 247.896);
-    --accent-foreground: oklch(0.279 0.041 260.031);
-    --destructive: oklch(0.577 0.245 27.325); /* #DC2626 */
-    --destructive-foreground: oklch(0.985 0 0);
-    --success: oklch(0.627 0.169 149.214); /* #16A34A */
-    --success-foreground: oklch(0.985 0 0);
-    --border: oklch(0.929 0.013 255.508);
-    --input: oklch(0.929 0.013 255.508);
-    --ring: oklch(0.511 0.234 274.001);
-    --chart-1: oklch(0.511 0.234 274.001);
-    --chart-2: oklch(0.627 0.169 149.214);
-    --chart-3: oklch(0.554 0.046 257.417);
-    --chart-4: oklch(0.708 0 0);
-    --chart-5: oklch(0.371 0 0);
+    /* LocalLeads AI brand tokens — exact hex per leadgen.md §11 / design
+       system spec. These are Tailwind's neutral gray-50/200/500/900 scale,
+       used deliberately so "no other colors anywhere" holds by construction. */
+    --background: #f9fafb;
+    --foreground: #111827;
+    --card: #ffffff;
+    --card-foreground: #111827;
+    --popover: #ffffff;
+    --popover-foreground: #111827;
+    --primary: #4f46e5;
+    --primary-foreground: #ffffff;
+    --secondary: #f3f4f6;
+    --secondary-foreground: #111827;
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+    --accent: #f3f4f6;
+    --accent-foreground: #111827;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --success: #16a34a;
+    --success-foreground: #ffffff;
+    --border: #e5e7eb;
+    --input: #e5e7eb;
+    --ring: #4f46e5;
+    --chart-1: #4f46e5;
+    --chart-2: #16a34a;
+    --chart-3: #6b7280;
+    --chart-4: #d1d5db;
+    --chart-5: #374151;
     --radius: 0.625rem;
-    --sidebar: oklch(1 0 0);
-    --sidebar-foreground: oklch(0.208 0.042 265.755);
-    --sidebar-primary: oklch(0.511 0.234 274.001);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.968 0.007 247.896);
-    --sidebar-accent-foreground: oklch(0.279 0.041 260.031);
-    --sidebar-border: oklch(0.929 0.013 255.508);
-    --sidebar-ring: oklch(0.511 0.234 274.001);
+    --sidebar: #ffffff;
+    --sidebar-foreground: #111827;
+    --sidebar-primary: #4f46e5;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f3f4f6;
+    --sidebar-accent-foreground: #111827;
+    --sidebar-border: #e5e7eb;
+    --sidebar-ring: #4f46e5;
   }
 
   .dark {
-    --background: oklch(0.208 0.042 265.755);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.279 0.041 260.031);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.279 0.041 260.031);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.623 0.188 274.001);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.354 0.045 258.4);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.354 0.045 258.4);
-    --muted-foreground: oklch(0.708 0.02 260);
-    --accent: oklch(0.354 0.045 258.4);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.985 0 0);
-    --success: oklch(0.696 0.157 149.214);
-    --success-foreground: oklch(0.985 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.623 0.188 274.001);
-    --chart-1: oklch(0.623 0.188 274.001);
-    --chart-2: oklch(0.696 0.157 149.214);
-    --chart-3: oklch(0.708 0.02 260);
-    --chart-4: oklch(0.556 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.279 0.041 260.031);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.623 0.188 274.001);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.354 0.045 258.4);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.623 0.188 274.001);
+    --background: #111827;
+    --foreground: #f9fafb;
+    --card: #1f2937;
+    --card-foreground: #f9fafb;
+    --popover: #1f2937;
+    --popover-foreground: #f9fafb;
+    --primary: #6366f1;
+    --primary-foreground: #ffffff;
+    --secondary: #374151;
+    --secondary-foreground: #f9fafb;
+    --muted: #374151;
+    --muted-foreground: #9ca3af;
+    --accent: #374151;
+    --accent-foreground: #f9fafb;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --success: #22c55e;
+    --success-foreground: #ffffff;
+    --border: color-mix(in oklab, #f9fafb 12%, transparent);
+    --input: color-mix(in oklab, #f9fafb 16%, transparent);
+    --ring: #6366f1;
+    --chart-1: #6366f1;
+    --chart-2: #22c55e;
+    --chart-3: #9ca3af;
+    --chart-4: #6b7280;
+    --chart-5: #d1d5db;
+    --sidebar: #1f2937;
+    --sidebar-foreground: #f9fafb;
+    --sidebar-primary: #6366f1;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #374151;
+    --sidebar-accent-foreground: #f9fafb;
+    --sidebar-border: color-mix(in oklab, #f9fafb 12%, transparent);
+    --sidebar-ring: #6366f1;
   }
 
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans font-normal;
+    line-height: 1.6;
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+    line-height: 1.25;
   }
 }

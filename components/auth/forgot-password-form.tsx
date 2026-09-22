@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -91,10 +91,7 @@ export function ForgotPasswordForm() {
 
       {formError && <p className="text-destructive text-sm">{formError}</p>}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting && (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        )}
+      <Button type="submit" className="w-full" loading={isSubmitting}>
         Send reset link
       </Button>
 

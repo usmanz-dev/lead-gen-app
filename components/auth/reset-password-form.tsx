@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
-import { Loader2 } from "lucide-react";
 
 const resetPasswordSchema = z
   .object({
@@ -107,10 +106,7 @@ export function ResetPasswordForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting && (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        )}
+      <Button type="submit" className="w-full" loading={isSubmitting}>
         Reset password
       </Button>
     </form>

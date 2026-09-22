@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
-import { Loader2, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
 
 export function SignupForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,11 +121,8 @@ export function SignupForm() {
         variant="outline"
         className="w-full"
         onClick={onGoogleSignup}
-        disabled={isGoogleLoading}
+        loading={isGoogleLoading}
       >
-        {isGoogleLoading && (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        )}
         Continue with Google
       </Button>
 
@@ -186,10 +183,7 @@ export function SignupForm() {
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          )}
+        <Button type="submit" className="w-full" loading={isSubmitting}>
           Create account
         </Button>
       </form>

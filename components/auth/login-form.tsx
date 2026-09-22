@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
-import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -90,11 +89,8 @@ export function LoginForm() {
         variant="outline"
         className="w-full"
         onClick={onGoogleLogin}
-        disabled={isGoogleLoading}
+        loading={isGoogleLoading}
       >
-        {isGoogleLoading && (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        )}
         Continue with Google
       </Button>
 
@@ -148,10 +144,7 @@ export function LoginForm() {
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          )}
+        <Button type="submit" className="w-full" loading={isSubmitting}>
           Log in
         </Button>
       </form>
