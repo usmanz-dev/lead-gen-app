@@ -7,7 +7,7 @@ import {
 } from "@/components/marketing/social-icons";
 
 const PRODUCT_LINKS = [
-  { href: "/#features", label: "Features" },
+  { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];

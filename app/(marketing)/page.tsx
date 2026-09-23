@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { Reveal } from "@/components/ui/reveal";
 import { HeroMockup } from "@/components/marketing/hero-mockup";
+import { FinalCtaBanner } from "@/components/marketing/final-cta-banner";
 import {
   Search,
   Gauge,
@@ -50,31 +51,37 @@ const FEATURES = [
     icon: Search,
     title: "Lead Extraction",
     description: "Scrape Google Maps by keyword and location — no paid API.",
+    href: "/features#lead-extraction",
   },
   {
     icon: Gauge,
     title: "Opportunity Score",
     description: "A 0-100 score with a visible breakdown of exactly why.",
+    href: "/features#opportunity-score",
   },
   {
     icon: MailCheck,
     title: "Email Finder & Validator",
     description: "DNS + SMTP-level checks classify every contact you find.",
+    href: "/features#email-validator",
   },
   {
     icon: Send,
     title: "AI Outreach Generator",
     description: "Claude-written, non-generic cold emails under 150 words.",
+    href: "/features#ai-outreach",
   },
   {
     icon: MapPin,
     title: "Rank Tracker",
     description: "Grid-based Google Maps rank tracking, updated on schedule.",
+    href: "/features#rank-tracker",
   },
   {
     icon: FileBarChart,
     title: "White-Label Reports",
     description: "Branded PDF audits you can email straight to a prospect.",
+    href: "/features#white-label-reports",
   },
 ];
 
@@ -294,21 +301,23 @@ export default function HomePage() {
           </Reveal>
 
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, description }, i) => (
+            {FEATURES.map(({ icon: Icon, title, description, href }, i) => (
               <Reveal key={title} delay={(i % 3) * 0.1}>
-                <Card className="border-border/60 h-full">
-                  <CardHeader>
-                    <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </div>
-                    <CardTitle className="mt-3 text-base">{title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-sm">
-                      {description}
-                    </p>
-                  </CardContent>
-                </Card>
+                <Link href={href} className="block h-full">
+                  <Card className="border-border/60 h-full">
+                    <CardHeader>
+                      <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
+                        <Icon className="size-4" aria-hidden="true" />
+                      </div>
+                      <CardTitle className="mt-3 text-base">{title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground text-sm">
+                        {description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
               </Reveal>
             ))}
           </div>
@@ -462,27 +471,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="border-border bg-primary border-t">
-        <Reveal className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h2 className="text-primary-foreground text-3xl font-semibold tracking-tight">
-            Stop guessing which businesses need you
-          </h2>
-          <p className="text-primary-foreground/80 mx-auto mt-3 max-w-xl">
-            Run your first lead search in minutes — no credit card required to
-            get started.
-          </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="mt-8"
-            render={<Link href="/signup" />}
-          >
-            Start Free Trial
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
-        </Reveal>
-      </section>
+      <FinalCtaBanner />
     </>
   );
 }
