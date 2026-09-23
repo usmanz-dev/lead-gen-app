@@ -21,6 +21,27 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const { data: membership } = await supabase
+    .from("team_members")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!membership) {
+    redirect("/onboarding");
+  }
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("onboarding_completed")
+    .eq("id", membership.organization_id)
+    .maybeSingle();
+
+  if (!org?.onboarding_completed) {
+    redirect("/onboarding");
+  }
+
   return (
     <div className="flex min-h-screen">
       <AppSidebar />

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Radar, PartyPopper } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { completeOnboarding } from "@/app/onboarding/actions";
 
 export const metadata: Metadata = { title: "Welcome" };
 
@@ -28,29 +29,40 @@ export default async function OnboardingPage() {
     .limit(1)
     .maybeSingle();
 
+  let organizationId: string | null = membership?.organization_id ?? null;
   let orgName: string | null = null;
 
-  if (membership?.organization_id) {
+  if (organizationId) {
     const { data: org } = await supabase
       .from("organizations")
-      .select("name")
-      .eq("id", membership.organization_id)
+      .select("name, onboarding_completed")
+      .eq("id", organizationId)
       .maybeSingle();
+
+    if (org?.onboarding_completed) {
+      redirect("/dashboard");
+    }
     orgName = org?.name ?? null;
   }
 
   // Safety net: the signup form creates the organization directly, but if
   // that insert failed (or this account came in via an older flow), create
   // one now rather than leaving the user stuck with no organization.
-  if (!orgName) {
+  if (!organizationId || !orgName) {
     const fallbackName = `${firstName}'s Organization`;
     const { data: newOrg } = await supabase
       .from("organizations")
       .insert({ name: fallbackName })
-      .select("name")
+      .select("id, name")
       .single();
+    organizationId = newOrg?.id ?? organizationId;
     orgName = newOrg?.name ?? fallbackName;
   }
+
+  const completeOnboardingForThisOrg = completeOnboarding.bind(
+    null,
+    organizationId!
+  );
 
   return (
     <div className="from-primary/10 via-background to-secondary/50 flex min-h-screen flex-col items-center justify-center bg-linear-to-br px-4 py-12">
@@ -73,9 +85,11 @@ export default async function OnboardingPage() {
           The full setup wizard (business type, target industries and locations)
           is coming in a later step — for now, head straight to your dashboard.
         </p>
-        <Button className="mt-6 w-full" render={<Link href="/dashboard" />}>
-          Go to dashboard
-        </Button>
+        <form action={completeOnboardingForThisOrg}>
+          <Button type="submit" className="mt-6 w-full">
+            Go to dashboard
+          </Button>
+        </form>
       </div>
     </div>
   );

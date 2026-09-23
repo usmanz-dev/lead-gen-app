@@ -46,6 +46,7 @@ export interface Database {
           id: string;
           name: string;
           owner_id: string | null;
+          onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -53,6 +54,7 @@ export interface Database {
           id?: string;
           name: string;
           owner_id?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -60,6 +62,7 @@ export interface Database {
           id?: string;
           name?: string;
           owner_id?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };

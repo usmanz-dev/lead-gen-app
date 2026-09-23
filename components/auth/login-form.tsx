@@ -3,53 +3,94 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginValues } from "@/lib/validations/auth";
+import { getLoginErrorInfo } from "@/lib/auth-errors";
+import { forgetSessionOnBrowserClose } from "@/lib/remember-me";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
+  const [formError, setFormError] = useState<{
+    message: string;
+    suggestResendConfirmation?: boolean;
+  } | null>(null);
 
   const {
     register,
     handleSubmit,
+    control,
+    getValues,
     formState: { errors },
-  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    mode: "onTouched",
+    defaultValues: { email: "", password: "", rememberMe: true },
+  });
 
   async function onSubmit(values: LoginValues) {
+    if (isSubmitting) return;
     setIsSubmitting(true);
+    setFormError(null);
+    setResendDone(false);
+
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword(values);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
       if (error) {
-        toast.add({
-          type: "error",
-          title: "Couldn't log in",
-          description: error.message,
-        });
+        setFormError(getLoginErrorInfo(error));
         return;
       }
 
-      router.push(searchParams.get("redirect") ?? "/dashboard");
+      if (!values.rememberMe) {
+        forgetSessionOnBrowserClose();
+      }
+
+      const { data: membership } = await supabase
+        .from("team_members")
+        .select("organization_id")
+        .eq("user_id", data.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      let onboardingCompleted = false;
+      if (membership?.organization_id) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("onboarding_completed")
+          .eq("id", membership.organization_id)
+          .maybeSingle();
+        onboardingCompleted = org?.onboarding_completed ?? false;
+      }
+
+      router.push(
+        onboardingCompleted
+          ? (searchParams.get("redirect") ?? "/dashboard")
+          : "/onboarding"
+      );
       router.refresh();
     } catch (error) {
-      toast.add({
-        type: "error",
-        title: "Something went wrong",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Please check your setup and try again.",
-      });
+      setFormError(
+        getLoginErrorInfo(
+          error instanceof Error ? error : new Error(String(error))
+        )
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -61,24 +102,35 @@ export function LoginForm() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+        },
       });
       if (error) {
-        toast.add({
-          type: "error",
-          title: "Couldn't continue with Google",
-          description: error.message,
-        });
+        setFormError(getLoginErrorInfo(error));
         setIsGoogleLoading(false);
       }
     } catch (error) {
-      toast.add({
-        type: "error",
-        title: "Something went wrong",
-        description:
-          error instanceof Error ? error.message : "Please try again.",
-      });
+      setFormError(
+        getLoginErrorInfo(
+          error instanceof Error ? error : new Error(String(error))
+        )
+      );
       setIsGoogleLoading(false);
+    }
+  }
+
+  async function onResendConfirmation() {
+    setIsResending(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: getValues("email"),
+      });
+      if (!error) setResendDone(true);
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -90,6 +142,7 @@ export function LoginForm() {
         className="w-full"
         onClick={onGoogleLogin}
         loading={isGoogleLoading}
+        disabled={isSubmitting}
       >
         Continue with Google
       </Button>
@@ -99,7 +152,7 @@ export function LoginForm() {
           <span className="border-border w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background text-muted-foreground px-2">
+          <span className="bg-card text-muted-foreground px-2">
             Or continue with email
           </span>
         </div>
@@ -113,39 +166,105 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-destructive text-sm">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-primary text-sm hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={!!errors.password}
-            {...register("password")}
-          />
-          {errors.password && (
-            <p className="text-destructive text-sm">
-              {errors.password.message}
+            <p id="email-error" className="text-destructive text-sm">
+              {errors.email.message}
             </p>
           )}
         </div>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
-          Log in
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "password-error" : undefined}
+              className="pr-9"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-9 items-center justify-center transition-colors duration-150 ease-in-out"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={0}
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" aria-hidden="true" />
+              ) : (
+                <Eye className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p id="password-error" className="text-destructive text-sm">
+              {errors.password.message}
+            </p>
+          )}
+          <Link
+            href="/forgot-password"
+            className="text-primary block text-sm hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        <Controller
+          name="rememberMe"
+          control={control}
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="rememberMe"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <Label
+                htmlFor="rememberMe"
+                className="text-muted-foreground text-sm font-normal"
+              >
+                Remember me
+              </Label>
+            </div>
+          )}
+        />
+
+        {formError && (
+          <p className="text-destructive text-sm" role="alert">
+            {formError.message}
+            {formError.suggestResendConfirmation && (
+              <>
+                {" "}
+                {resendDone ? (
+                  <span className="text-success">Confirmation email sent.</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onResendConfirmation}
+                    disabled={isResending}
+                    className="font-medium hover:underline disabled:opacity-50"
+                  >
+                    {isResending ? "Sending…" : "Resend confirmation email"}
+                  </button>
+                )}
+              </>
+            )}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full"
+          loading={isSubmitting}
+          disabled={isGoogleLoading}
+        >
+          Log In
         </Button>
       </form>
 

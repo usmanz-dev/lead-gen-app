@@ -1,5 +1,5 @@
 -- Combined migration for one-time paste into Supabase SQL Editor.
--- Source of truth is supabase/migrations/*.sql (4 files, run in order below).
+-- Source of truth is supabase/migrations/*.sql (run in order below).
 -- Safe to delete this file after running it once.
 
 -- Extensions
@@ -704,3 +704,9 @@ $$;
 create trigger on_auth_user_email_updated
   after update on auth.users
   for each row execute function public.handle_user_email_update();
+
+-- Tracks whether an organization has finished the onboarding flow, so the
+-- login page can route back into onboarding instead of the dashboard.
+alter table public.organizations
+  add column onboarding_completed boolean not null default false;
+
