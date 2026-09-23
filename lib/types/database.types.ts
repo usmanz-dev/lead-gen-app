@@ -38,6 +38,7 @@ export type CampaignLeadEmailStatus =
   | "unsubscribed";
 export type RankTrackerSchedule = "daily" | "weekly" | "biweekly" | "monthly";
 export type BusinessType = "freelancer" | "agency" | "in_house_team" | "other";
+export type PostStatus = "draft" | "published";
 
 export interface Database {
   public: {
@@ -771,6 +772,48 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      posts: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          category: string;
+          author_name: string;
+          status: PostStatus;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          excerpt: string;
+          content: string;
+          category: string;
+          author_name?: string;
+          status?: PostStatus;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          title?: string;
+          excerpt?: string;
+          content?: string;
+          category?: string;
+          author_name?: string;
+          status?: PostStatus;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
