@@ -113,3 +113,86 @@ export function getLoginErrorInfo(error: AuthError | Error): LoginErrorInfo {
     message: `We couldn't log you in (${error.message}). Please try again, or contact support if this keeps happening.`,
   };
 }
+
+/**
+ * Maps failures from resetPasswordForEmail(). Never used for "this email
+ * isn't registered" — Supabase intentionally doesn't distinguish that case
+ * (it returns success either way), which is exactly what keeps the
+ * forgot-password flow from leaking which emails have accounts. Only real
+ * system-level failures (rate limiting, bad connection) land here.
+ */
+export function getForgotPasswordErrorInfo(error: AuthError | Error): {
+  message: string;
+} {
+  const message = error.message.toLowerCase();
+
+  if (message.includes("rate limit") || message.includes("too many")) {
+    return {
+      message:
+        "Too many reset attempts. Please wait a few minutes and try again.",
+    };
+  }
+
+  if (
+    message.includes("fetch") ||
+    message.includes("network") ||
+    message.includes("failed to fetch")
+  ) {
+    return {
+      message:
+        "Couldn't reach the server. Check your internet connection and try again.",
+    };
+  }
+
+  return {
+    message: `We couldn't send the reset link (${error.message}). Please try again, or contact support if this keeps happening.`,
+  };
+}
+
+export interface ResetPasswordErrorInfo {
+  message: string;
+  /** Set when the fix is to request a new link — the form links to /forgot-password. */
+  linkExpired?: boolean;
+}
+
+export function getResetPasswordErrorInfo(
+  error: AuthError | Error
+): ResetPasswordErrorInfo {
+  const message = error.message.toLowerCase();
+
+  if (
+    (message.includes("session") &&
+      (message.includes("missing") ||
+        message.includes("expired") ||
+        message.includes("invalid"))) ||
+    message.includes("otp") ||
+    message.includes("token")
+  ) {
+    return {
+      message: "This password reset link is invalid or has expired.",
+      linkExpired: true,
+    };
+  }
+
+  if (message.includes("password")) {
+    return {
+      message:
+        "That password doesn't meet the site's security requirements. Try a longer password with a mix of letters and numbers.",
+    };
+  }
+
+  if (
+    message.includes("fetch") ||
+    message.includes("network") ||
+    message.includes("failed to fetch")
+  ) {
+    return {
+      message:
+        "Couldn't reach the server. Check your internet connection and try again.",
+    };
+  }
+
+  return {
+    message: `We couldn't update your password (${error.message}). Please try again, or contact support if this keeps happening.`,
+  };
+}

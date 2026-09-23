@@ -4,17 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordValues,
+} from "@/lib/validations/auth";
+import { getForgotPasswordErrorInfo } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MailCheck } from "lucide-react";
-
-const forgotPasswordSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Enter a valid email"),
-});
-type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export function ForgotPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,29 +26,41 @@ export function ForgotPasswordForm() {
     formState: { errors },
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
+    mode: "onTouched",
+    defaultValues: { email: "" },
   });
 
   async function onSubmit(values: ForgotPasswordValues) {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setFormError(null);
+
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.resetPasswordForEmail(
         values.email,
-        { redirectTo: `${window.location.origin}/reset-password` }
+        {
+          // Route through /auth/callback so the recovery link's code gets
+          // exchanged for a session before the user reaches /reset-password
+          // — updateUser() there needs that session to already exist.
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        }
       );
 
       if (error) {
-        setFormError(error.message);
+        // Supabase never reports "this email isn't registered" here by
+        // design — any error at this point is a genuine system failure,
+        // not a signal about account existence, so it's safe to surface.
+        setFormError(getForgotPasswordErrorInfo(error).message);
         return;
       }
 
       setSentTo(values.email);
     } catch (error) {
       setFormError(
-        error instanceof Error
-          ? error.message
-          : "Please check your setup and try again."
+        getForgotPasswordErrorInfo(
+          error instanceof Error ? error : new Error(String(error))
+        ).message
       );
     } finally {
       setIsSubmitting(false);
@@ -64,7 +75,7 @@ export function ForgotPasswordForm() {
         </div>
         <p className="text-muted-foreground text-sm">
           If an account exists for <strong>{sentTo}</strong>, we&apos;ve sent a
-          password reset link to it.
+          password reset link to it. The link expires shortly, so use it soon.
         </p>
         <Link href="/login" className="text-primary text-sm hover:underline">
           Back to log in
@@ -82,17 +93,24 @@ export function ForgotPasswordForm() {
           type="email"
           autoComplete="email"
           aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
           {...register("email")}
         />
         {errors.email && (
-          <p className="text-destructive text-sm">{errors.email.message}</p>
+          <p id="email-error" className="text-destructive text-sm">
+            {errors.email.message}
+          </p>
         )}
       </div>
 
-      {formError && <p className="text-destructive text-sm">{formError}</p>}
+      {formError && (
+        <p className="text-destructive text-sm" role="alert">
+          {formError}
+        </p>
+      )}
 
       <Button type="submit" className="w-full" loading={isSubmitting}>
-        Send reset link
+        Send Reset Link
       </Button>
 
       <p className="text-muted-foreground text-center text-sm">
