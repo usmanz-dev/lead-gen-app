@@ -102,6 +102,14 @@ export function SiteFooter() {
             <h3 className="text-sm font-semibold">Contact</h3>
             <ul className="mt-3 space-y-2.5">
               <li>
+                <Link
+                  href="/about"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors duration-150 ease-in-out"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
                 <a
                   href="mailto:support@localleads.ai"
                   className="text-muted-foreground hover:text-foreground text-sm transition-colors duration-150 ease-in-out"
