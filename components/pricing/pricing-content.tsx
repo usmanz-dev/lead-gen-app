@@ -21,7 +21,7 @@ const FAQS = [
   {
     question: "Can I get a refund?",
     answer:
-      "If you subscribe to a paid plan for the first time and it isn't working out, contact us within 7 days of your first charge for a full refund, no questions asked. After that, we don't prorate refunds for a partial month, but you can cancel any time to stop future billing. See the full Refund Policy for annual plans and billing-error details.",
+      "If you subscribe to a paid plan for the first time and it isn't working out, contact us within 14 days of your first payment for a full refund, no questions asked. After that, we don't prorate refunds for a partial month, but you can cancel any time to stop future billing. See the full Refund Policy for annual plans and billing-error details.",
   },
   {
     question: "Can I upgrade or downgrade later?",
