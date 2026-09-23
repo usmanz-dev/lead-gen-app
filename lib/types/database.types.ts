@@ -37,6 +37,7 @@ export type CampaignLeadEmailStatus =
   | "bounced"
   | "unsubscribed";
 export type RankTrackerSchedule = "daily" | "weekly" | "biweekly" | "monthly";
+export type BusinessType = "freelancer" | "agency" | "in_house_team" | "other";
 
 export interface Database {
   public: {
@@ -47,6 +48,10 @@ export interface Database {
           name: string;
           owner_id: string | null;
           onboarding_completed: boolean;
+          business_type: BusinessType | null;
+          target_industries: string[];
+          target_locations: string[];
+          onboarding_step: number;
           created_at: string;
           updated_at: string;
         };
@@ -55,6 +60,10 @@ export interface Database {
           name: string;
           owner_id?: string | null;
           onboarding_completed?: boolean;
+          business_type?: BusinessType | null;
+          target_industries?: string[];
+          target_locations?: string[];
+          onboarding_step?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -63,6 +72,10 @@ export interface Database {
           name?: string;
           owner_id?: string | null;
           onboarding_completed?: boolean;
+          business_type?: BusinessType | null;
+          target_industries?: string[];
+          target_locations?: string[];
+          onboarding_step?: number;
           created_at?: string;
           updated_at?: string;
         };

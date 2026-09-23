@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Radar, PartyPopper } from "lucide-react";
+import { Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { completeOnboarding } from "@/app/onboarding/actions";
+import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import type { BusinessType } from "@/lib/types/database.types";
 
 export const metadata: Metadata = { title: "Welcome" };
 
-// This is an authenticated page — always render fresh, never prerender.
+// This is an authenticated page whose content depends on this user's
+// in-progress onboarding state — never prerender it.
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
@@ -29,40 +30,57 @@ export default async function OnboardingPage() {
     .limit(1)
     .maybeSingle();
 
-  let organizationId: string | null = membership?.organization_id ?? null;
-  let orgName: string | null = null;
+  let organizationId = membership?.organization_id ?? null;
+  let org: {
+    business_type: string | null;
+    target_industries: string[];
+    target_locations: string[];
+    onboarding_step: number;
+    onboarding_completed: boolean;
+  } | null = null;
 
   if (organizationId) {
-    const { data: org } = await supabase
+    const { data } = await supabase
       .from("organizations")
-      .select("name, onboarding_completed")
+      .select(
+        "business_type, target_industries, target_locations, onboarding_step, onboarding_completed"
+      )
       .eq("id", organizationId)
       .maybeSingle();
-
-    if (org?.onboarding_completed) {
-      redirect("/dashboard");
-    }
-    orgName = org?.name ?? null;
+    org = data;
   }
 
   // Safety net: the signup form creates the organization directly, but if
   // that insert failed (or this account came in via an older flow), create
   // one now rather than leaving the user stuck with no organization.
-  if (!organizationId || !orgName) {
+  if (!organizationId || !org) {
     const fallbackName = `${firstName}'s Organization`;
     const { data: newOrg } = await supabase
       .from("organizations")
       .insert({ name: fallbackName })
-      .select("id, name")
+      .select(
+        "id, business_type, target_industries, target_locations, onboarding_step, onboarding_completed"
+      )
       .single();
-    organizationId = newOrg?.id ?? organizationId;
-    orgName = newOrg?.name ?? fallbackName;
+
+    if (newOrg) {
+      organizationId = newOrg.id;
+      org = newOrg;
+    }
   }
 
-  const completeOnboardingForThisOrg = completeOnboarding.bind(
-    null,
-    organizationId!
-  );
+  if (org?.onboarding_completed) {
+    redirect("/dashboard");
+  }
+
+  const { data: senderAccount } = organizationId
+    ? await supabase
+        .from("sender_accounts")
+        .select("email_address")
+        .eq("organization_id", organizationId)
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <div className="from-primary/10 via-background to-secondary/50 flex min-h-screen flex-col items-center justify-center bg-linear-to-br px-4 py-12">
@@ -71,26 +89,17 @@ export default async function OnboardingPage() {
         <span>LocalLeads AI</span>
       </Link>
 
-      <div className="border-border bg-card w-[92%] max-w-105 rounded-xl border p-6 text-center shadow-sm sm:p-8">
-        <div className="bg-success/10 text-success mx-auto flex size-12 items-center justify-center rounded-full">
-          <PartyPopper className="size-6" aria-hidden="true" />
-        </div>
-        <h1 className="mt-4 text-xl font-semibold">Welcome, {firstName}!</h1>
-        <p className="text-muted-foreground mt-2 text-sm">
-          Your organization,{" "}
-          <strong className="text-foreground">{orgName}</strong>, is ready. You
-          can rename it any time from Team Settings.
-        </p>
-        <p className="text-muted-foreground mt-4 text-xs">
-          The full setup wizard (business type, target industries and locations)
-          is coming in a later step — for now, head straight to your dashboard.
-        </p>
-        <form action={completeOnboardingForThisOrg}>
-          <Button type="submit" className="mt-6 w-full">
-            Go to dashboard
-          </Button>
-        </form>
-      </div>
+      <OnboardingWizard
+        organizationId={organizationId!}
+        firstName={firstName}
+        initialStep={org?.onboarding_step ?? 0}
+        initialBusinessType={
+          (org?.business_type as BusinessType | null) ?? null
+        }
+        initialIndustries={org?.target_industries ?? []}
+        initialLocations={org?.target_locations ?? []}
+        initialSenderEmail={senderAccount?.email_address ?? null}
+      />
     </div>
   );
 }
