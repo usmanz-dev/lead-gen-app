@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { SignupForm } from "@/components/auth/signup-form";
 
@@ -12,7 +13,9 @@ export default function SignupPage() {
           Start finding local leads in minutes
         </p>
       </div>
-      <SignupForm />
+      <Suspense>
+        <SignupForm />
+      </Suspense>
     </div>
   );
 }

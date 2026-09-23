@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createClient } from "@/lib/supabase/client";
 import { signupSchema, type SignupValues } from "@/lib/validations/auth";
 import { getSignupErrorInfo } from "@/lib/auth-errors";
+import { isPlanId, isBillingInterval } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,14 @@ import { Eye, EyeOff, MailCheck } from "lucide-react";
 
 export function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const intervalParam = searchParams.get("interval");
+  // A plan selected on the pricing page carries through to Stripe Checkout
+  // right after signup instead of the normal onboarding wizard.
+  const postSignupPath = isPlanId(planParam)
+    ? `/checkout?plan=${planParam}&interval=${isBillingInterval(intervalParam) ? intervalParam : "monthly"}`
+    : "/onboarding";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -59,7 +68,7 @@ export function SignupForm() {
         password: values.password,
         options: {
           data: { full_name: values.fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(postSignupPath)}`,
         },
       });
 
@@ -104,7 +113,7 @@ export function SignupForm() {
         console.error("Failed to create organization at signup:", orgError);
       }
 
-      router.push("/onboarding");
+      router.push(postSignupPath);
       router.refresh();
     } catch (error) {
       setFormError(
@@ -124,7 +133,7 @@ export function SignupForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(postSignupPath)}`,
         },
       });
       if (error) {
