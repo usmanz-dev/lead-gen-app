@@ -1,91 +1,154 @@
 import type { Metadata } from "next";
-import { Search, Send, Gauge } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Users, Send, MessageCircleReply, Gauge, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UsageCard } from "@/components/dashboard/usage-card";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { LeadsChart } from "@/components/dashboard/leads-chart";
+import { EmptyDashboardState } from "@/components/dashboard/empty-dashboard-state";
+import {
+  getUsageSummary,
+  getQuickStats,
+  getRecentActivity,
+  getDailyLeadCounts,
+  isOrganizationEmpty,
+} from "@/lib/dashboard";
 
 export const metadata: Metadata = { title: "Dashboard" };
-
-const UPCOMING_STATS = [
-  {
-    icon: Search,
-    label: "Leads found",
-    note: "Wires up once the Lead Search + scraping engine ships (Phase 3).",
-  },
-  {
-    icon: Gauge,
-    label: "Avg. Opportunity Score",
-    note: "Wires up once lead scoring ships (Phase 3).",
-  },
-  {
-    icon: Send,
-    label: "Emails sent",
-    note: "Wires up once the Bulk Sending Engine ships (Phase 4).",
-  },
-];
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
+  const { data: membership } = await supabase
+    .from("team_members")
+    .select("organization_id")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+  if (!membership) redirect("/onboarding");
+
+  const organizationId = membership.organization_id;
   const firstName =
-    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
-    user?.email?.split("@")[0] ??
+    (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
+    user.email?.split("@")[0] ??
     "there";
+
+  const [usage, stats, activity, dailyCounts, isEmpty] = await Promise.all([
+    getUsageSummary(organizationId),
+    getQuickStats(organizationId),
+    getRecentActivity(organizationId),
+    getDailyLeadCounts(organizationId),
+    isOrganizationEmpty(organizationId),
+  ]);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome back, {firstName}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Here&apos;s where your lead-gen pipeline will live once search and
-          outreach are wired up.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Welcome back, {firstName}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {usage.isTrial ? (
+              <>
+                You&apos;re on a free trial.{" "}
+                <Link href="/pricing" className="text-primary hover:underline">
+                  Choose a plan
+                </Link>{" "}
+                anytime.
+              </>
+            ) : (
+              `${usage.plan} plan`
+            )}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button disabled>
+            <Sparkles className="size-4" aria-hidden="true" />
+            New Lead Search
+          </Button>
+          <Badge variant="outline">Coming soon</Badge>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {UPCOMING_STATS.map(({ icon: Icon, label, note }) => (
-          <Card key={label}>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-muted-foreground text-sm font-medium">
-                {label}
+      {isEmpty ? (
+        <EmptyDashboardState />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <UsageCard
+              label="Leads used"
+              used={usage.leadsUsed}
+              limit={usage.leadsLimit}
+            />
+            <UsageCard
+              label="Emails sent"
+              used={usage.emailsUsed}
+              limit={usage.emailsLimit}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              icon={Users}
+              label="Total leads"
+              value={stats.totalLeads.toLocaleString()}
+              trend={stats.totalLeadsTrend}
+            />
+            <StatCard
+              icon={Send}
+              label="Active campaigns"
+              value={stats.activeCampaigns.toLocaleString()}
+            />
+            <StatCard
+              icon={MessageCircleReply}
+              label="Avg. reply rate"
+              value={
+                stats.avgReplyRate !== null ? `${stats.avgReplyRate}%` : "—"
+              }
+            />
+            <StatCard
+              icon={Gauge}
+              label="Avg. Opportunity Score"
+              value={
+                stats.avgOpportunityScore !== null
+                  ? String(stats.avgOpportunityScore)
+                  : "—"
+              }
+            />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Leads collected — last 30 days
               </CardTitle>
-              <Icon
-                className="text-muted-foreground size-4"
-                aria-hidden="true"
-              />
             </CardHeader>
             <CardContent>
-              <div className="text-muted-foreground/40 text-2xl font-semibold">
-                —
-              </div>
-              <p className="text-muted-foreground mt-1 text-xs">{note}</p>
+              <LeadsChart data={dailyCounts} />
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle>Run your first lead search</CardTitle>
-            <Badge variant="outline">Coming soon</Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground max-w-2xl text-sm">
-            The New Lead Search page — where you&apos;ll search a niche and
-            location, run the Google Maps scraper, and see each business&apos;s
-            Opportunity Score — is built in the next phase (Phase 3: Core loop,
-            per the product build order). This dashboard shell, navigation, and
-            your account are already fully wired to real authentication.
-          </p>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Recent activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityFeed events={activity} />
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

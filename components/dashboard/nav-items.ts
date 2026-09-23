@@ -3,11 +3,11 @@ import {
   Search,
   Users,
   Send,
-  KanbanSquare,
   MapPin,
   FileBarChart,
   UsersRound,
   CreditCard,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,7 +22,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
-    label: "New Lead Search",
+    label: "Lead Search",
     href: "/dashboard/search",
     icon: Search,
     comingSoon: true,
@@ -32,12 +32,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Campaigns",
     href: "/dashboard/campaigns",
     icon: Send,
-    comingSoon: true,
-  },
-  {
-    label: "CRM Pipeline",
-    href: "/dashboard/pipeline",
-    icon: KanbanSquare,
     comingSoon: true,
   },
   {
@@ -62,6 +56,12 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Billing",
     href: "/dashboard/billing",
     icon: CreditCard,
+    comingSoon: true,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
     comingSoon: true,
   },
 ];

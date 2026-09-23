@@ -1,9 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut, Radar } from "lucide-react";
+import {
+  Menu,
+  LogOut,
+  Radar,
+  Search,
+  Bell,
+  User,
+  CreditCard,
+  BellOff,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -21,7 +33,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppSidebarNav } from "@/components/dashboard/app-sidebar-nav";
-import { useState } from "react";
 
 function initialsFor(name: string | null, email: string) {
   if (name) {
@@ -49,7 +60,7 @@ export function AppTopbar({
   }
 
   return (
-    <header className="border-border bg-background flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-6">
+    <header className="border-border bg-background flex h-16 shrink-0 items-center gap-3 border-b px-4 sm:px-6">
       <div className="flex items-center gap-2 md:hidden">
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger render={<Button variant="ghost" size="icon" />}>
@@ -68,39 +79,90 @@ export function AppTopbar({
         </Sheet>
       </div>
 
-      <div />
-
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button variant="ghost" className="gap-2 px-1.5">
-              <Avatar className="size-7">
-                <AvatarFallback className="text-xs">
-                  {initialsFor(userName, userEmail)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="hidden text-sm font-medium sm:inline">
-                {userName ?? userEmail}
-              </span>
-            </Button>
-          }
+      <div className="relative hidden max-w-sm flex-1 sm:block">
+        <Search
+          className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+          aria-hidden="true"
         />
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">
-                {userName ?? "Account"}
-              </span>
-              <span className="text-muted-foreground text-xs">{userEmail}</span>
+        <Input
+          disabled
+          placeholder="Search leads, campaigns… (coming soon)"
+          className="pl-8"
+          aria-label="Search (coming soon)"
+        />
+      </div>
+
+      <div className="ml-auto flex items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+            <Bell className="size-5" aria-hidden="true" />
+            <span className="sr-only">Notifications</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="text-muted-foreground flex flex-col items-center gap-2 px-4 py-8 text-center text-sm">
+              <BellOff className="size-5" aria-hidden="true" />
+              You&apos;re all caught up — nothing new yet.
             </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOut className="size-4" aria-hidden="true" />
-            Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" className="gap-2 px-1.5">
+                <Avatar className="size-7">
+                  <AvatarFallback className="text-xs">
+                    {initialsFor(userName, userEmail)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden text-sm font-medium sm:inline">
+                  {userName ?? userEmail}
+                </span>
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">
+                  {userName ?? "Account"}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {userEmail}
+                </span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>
+              <User className="size-4" aria-hidden="true" />
+              Account
+              <Badge
+                variant="outline"
+                className="ml-auto px-1.5 py-0 text-[10px] font-normal"
+              >
+                Soon
+              </Badge>
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>
+              <CreditCard className="size-4" aria-hidden="true" />
+              Billing
+              <Badge
+                variant="outline"
+                className="ml-auto px-1.5 py-0 text-[10px] font-normal"
+              >
+                Soon
+              </Badge>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="size-4" aria-hidden="true" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }
