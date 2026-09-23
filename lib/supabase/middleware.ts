@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIX = "/dashboard";
+const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"];
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 /**
@@ -44,7 +44,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && pathname.startsWith(PROTECTED_PREFIX)) {
+  if (
+    !user &&
+    PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirect", pathname);

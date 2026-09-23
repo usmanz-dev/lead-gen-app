@@ -13,8 +13,10 @@ export const signupSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Include at least one uppercase letter")
     .regex(/[0-9]/, "Include at least one number"),
+  agreedToTerms: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the Terms of Service to continue",
+  }),
 });
 
 export type SignupValues = z.infer<typeof signupSchema>;
