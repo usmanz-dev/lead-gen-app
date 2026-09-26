@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/types/database.types";
+
+export { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Supabase client for use in Server Components, Route Handlers, and Server Actions.
@@ -35,25 +36,5 @@ export async function createClient() {
         }
       },
     },
-  });
-}
-
-/**
- * Admin client using the service role key — bypasses Row-Level Security.
- * Server-only. Never import this from a Client Component or expose the key
- * to the browser.
- */
-export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceRoleKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Copy .env.example to .env.local and fill in your Supabase project credentials."
-    );
-  }
-
-  return createSupabaseClient<Database>(url, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
   });
 }

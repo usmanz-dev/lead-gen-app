@@ -21,13 +21,8 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  {
-    label: "Lead Search",
-    href: "/dashboard/search",
-    icon: Search,
-    comingSoon: true,
-  },
-  { label: "Leads", href: "/dashboard/leads", icon: Users, comingSoon: true },
+  { label: "Lead Search", href: "/dashboard/search", icon: Search },
+  { label: "Leads", href: "/dashboard/leads", icon: Users },
   {
     label: "Campaigns",
     href: "/dashboard/campaigns",

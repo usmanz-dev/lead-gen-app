@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { Users, Send, MessageCircleReply, Gauge, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsageCard } from "@/components/dashboard/usage-card";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -72,13 +71,10 @@ export default async function DashboardPage() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button disabled>
-            <Sparkles className="size-4" aria-hidden="true" />
-            New Lead Search
-          </Button>
-          <Badge variant="outline">Coming soon</Badge>
-        </div>
+        <Button render={<Link href="/dashboard/search" />}>
+          <Sparkles className="size-4" aria-hidden="true" />
+          New Lead Search
+        </Button>
       </div>
 
       {isEmpty ? (

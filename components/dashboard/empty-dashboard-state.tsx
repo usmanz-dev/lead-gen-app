@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { Search, MapPin, Building2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export function EmptyDashboardState() {
   return (
@@ -29,17 +29,14 @@ export function EmptyDashboardState() {
         Your lead pipeline starts here
       </h2>
       <p className="text-muted-foreground mt-2 max-w-sm text-sm">
-        Once Lead Search launches, your first results — scored, verified, and
+        Run your first Lead Search and your results — scored, verified, and
         ready to contact — will show up right on this dashboard.
       </p>
 
-      <div className="mt-6 flex items-center gap-2">
-        <Button disabled>
-          <Sparkles className="size-4" aria-hidden="true" />
-          New Lead Search
-        </Button>
-        <Badge variant="outline">Coming soon</Badge>
-      </div>
+      <Button className="mt-6" render={<Link href="/dashboard/search" />}>
+        <Sparkles className="size-4" aria-hidden="true" />
+        New Lead Search
+      </Button>
     </div>
   );
 }

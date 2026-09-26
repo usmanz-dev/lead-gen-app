@@ -1,6 +1,9 @@
 import "server-only";
 import { Redis } from "ioredis";
 import { Queue, type QueueOptions } from "bullmq";
+import { QUEUE_NAMES } from "@/lib/queue-names";
+
+export { QUEUE_NAMES };
 
 let redisConnection: Redis | null = null;
 
@@ -21,23 +24,6 @@ const queueOptions: QueueOptions = {
     return getRedisConnection();
   },
 };
-
-/**
- * Job queue names, defined up front so producers (API routes) and
- * consumers (worker processes) stay in sync.
- *
- * TODO(Phase 3 — Core loop): add a worker process for "lead-search" that
- * runs the Playwright scraper (leadgen.md §4 step 3).
- * TODO(Phase 4 — Contact & Outreach): add "email-validation" and
- * "campaign-send" workers.
- * TODO(Phase 6 — Retention & upsell): add a "rank-tracker" worker.
- */
-export const QUEUE_NAMES = {
-  leadSearch: "lead-search",
-  emailValidation: "email-validation",
-  campaignSend: "campaign-send",
-  rankTracker: "rank-tracker",
-} as const;
 
 const queues = new Map<string, Queue>();
 
