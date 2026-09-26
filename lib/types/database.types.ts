@@ -39,6 +39,14 @@ export type CampaignLeadEmailStatus =
 export type RankTrackerSchedule = "daily" | "weekly" | "biweekly" | "monthly";
 export type BusinessType = "freelancer" | "agency" | "in_house_team" | "other";
 export type PostStatus = "draft" | "published";
+export type LeadActivityEventType =
+  | "created"
+  | "status_changed"
+  | "note_added"
+  | "note_updated"
+  | "note_deleted"
+  | "email_validated"
+  | "added_to_campaign";
 
 export interface Database {
   public: {
@@ -411,6 +419,99 @@ export interface Database {
             columns: ["search_id"];
             isOneToOne: false;
             referencedRelation: "searches";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lead_notes: {
+        Row: {
+          id: string;
+          lead_id: string;
+          organization_id: string;
+          created_by: string | null;
+          body: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          organization_id: string;
+          created_by?: string | null;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          organization_id?: string;
+          created_by?: string | null;
+          body?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_notes_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lead_activity_events: {
+        Row: {
+          id: string;
+          lead_id: string;
+          organization_id: string;
+          actor_id: string | null;
+          event_type: LeadActivityEventType;
+          message: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          organization_id: string;
+          actor_id?: string | null;
+          event_type: LeadActivityEventType;
+          message: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          organization_id?: string;
+          actor_id?: string | null;
+          event_type?: LeadActivityEventType;
+          message?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lead_activity_events_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lead_activity_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Sheet,
   SheetContent,
@@ -17,7 +18,7 @@ import {
   EmailCell,
   WebsiteCell,
 } from "@/components/dashboard/lead-badges";
-import { Send, Trash2, MapPin, Phone, Star } from "lucide-react";
+import { Send, Trash2, MapPin, Phone, Star, Maximize2 } from "lucide-react";
 import type { LeadDetailRow } from "@/lib/types/leads-table";
 
 const BREAKDOWN_LABELS: Record<string, string> = {
@@ -105,6 +106,16 @@ export function LeadDetailSheet({
                 <ScoreBadge score={lead.opportunity_score} />
               </div>
             </SheetHeader>
+
+            <div className="px-4">
+              <Link
+                href={`/dashboard/leads/${lead.id}`}
+                className="text-primary inline-flex items-center gap-1.5 text-sm hover:underline"
+              >
+                <Maximize2 className="size-3.5" aria-hidden="true" />
+                View full details
+              </Link>
+            </div>
 
             <div className="flex-1 space-y-5 overflow-y-auto px-4 text-sm">
               <div className="space-y-2">
