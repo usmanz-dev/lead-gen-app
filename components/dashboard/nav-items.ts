@@ -23,12 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Lead Search", href: "/dashboard/search", icon: Search },
   { label: "Leads", href: "/dashboard/leads", icon: Users },
-  {
-    label: "Campaigns",
-    href: "/dashboard/campaigns",
-    icon: Send,
-    comingSoon: true,
-  },
+  { label: "Campaigns", href: "/dashboard/campaigns", icon: Send },
   {
     label: "Rank Tracker",
     href: "/dashboard/rank-tracker",

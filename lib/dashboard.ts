@@ -93,7 +93,7 @@ export async function getQuickStats(
       .from("campaigns")
       .select("*", { count: "exact", head: true })
       .eq("organization_id", organizationId)
-      .eq("status", "active"),
+      .eq("status", "sending"),
     supabase
       .from("campaign_leads")
       .select("*, campaigns!inner(organization_id)", {

@@ -27,7 +27,8 @@ export type WarmupStatus = "not_started" | "warming_up" | "completed";
 export type SearchStatus = "pending" | "running" | "completed" | "failed";
 export type EmailValidationStatus = "valid" | "risky" | "invalid" | "unknown";
 export type LeadStatus = "new" | "contacted" | "interested" | "closed";
-export type CampaignStatus = "draft" | "active" | "paused" | "completed";
+export type CampaignStatus =
+  "draft" | "scheduled" | "sending" | "paused" | "completed";
 export type CampaignLeadEmailStatus =
   | "queued"
   | "sent"
@@ -524,6 +525,7 @@ export interface Database {
           sender_account_id: string | null;
           name: string;
           status: CampaignStatus;
+          scheduled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -534,6 +536,7 @@ export interface Database {
           sender_account_id?: string | null;
           name: string;
           status?: CampaignStatus;
+          scheduled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -544,6 +547,7 @@ export interface Database {
           sender_account_id?: string | null;
           name?: string;
           status?: CampaignStatus;
+          scheduled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
