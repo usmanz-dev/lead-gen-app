@@ -51,7 +51,7 @@ export interface ConnectSenderEmailInput {
 export async function connectSenderEmail(
   organizationId: string,
   input: ConnectSenderEmailInput
-) {
+): Promise<{ id: string }> {
   const supabase = await createClient();
 
   const encryptedCredentials = encryptCredential(
@@ -63,16 +63,21 @@ export async function connectSenderEmail(
     })
   );
 
-  const { error } = await supabase.from("sender_accounts").insert({
-    organization_id: organizationId,
-    email_address: input.emailAddress,
-    provider: "smtp",
-    encrypted_credentials: encryptedCredentials,
-  });
+  const { data, error } = await supabase
+    .from("sender_accounts")
+    .insert({
+      organization_id: organizationId,
+      email_address: input.emailAddress,
+      provider: "smtp",
+      encrypted_credentials: encryptedCredentials,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    throw new Error(`Couldn't connect that email: ${error.message}`);
+  if (error || !data) {
+    throw new Error(`Couldn't connect that email: ${error?.message}`);
   }
+  return { id: data.id };
 }
 
 export async function completeOnboarding(organizationId: string) {

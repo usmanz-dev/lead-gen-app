@@ -1,4 +1,6 @@
-import "server-only";
+// No "server-only" guard here — the standalone worker process (which
+// decrypts sender_account credentials to actually send campaign emails)
+// imports this too, and that guard throws outside Next's own bundler.
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGORITHM = "aes-256-gcm";

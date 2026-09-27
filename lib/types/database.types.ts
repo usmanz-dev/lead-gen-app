@@ -526,6 +526,9 @@ export interface Database {
           name: string;
           status: CampaignStatus;
           scheduled_at: string | null;
+          email_subject: string | null;
+          email_body: string | null;
+          include_unvalidated_emails: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -537,6 +540,9 @@ export interface Database {
           name: string;
           status?: CampaignStatus;
           scheduled_at?: string | null;
+          email_subject?: string | null;
+          email_body?: string | null;
+          include_unvalidated_emails?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -548,6 +554,9 @@ export interface Database {
           name?: string;
           status?: CampaignStatus;
           scheduled_at?: string | null;
+          email_subject?: string | null;
+          email_body?: string | null;
+          include_unvalidated_emails?: boolean;
           created_at?: string;
           updated_at?: string;
         };

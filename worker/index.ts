@@ -10,11 +10,13 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-import { Worker, type Job } from "bullmq";
+import { Worker, Queue, type Job } from "bullmq";
 import { Redis } from "ioredis";
 import { QUEUE_NAMES } from "@/lib/queue-names";
 import { processLeadSearchJob } from "@/worker/processors/lead-search";
+import { processCampaignSendJob } from "@/worker/processors/campaign-send";
 import type { LeadSearchJobData } from "@/lib/jobs/lead-search";
+import type { CampaignSendJobData } from "@/lib/jobs/campaign-send";
 
 function getRedisUrl(): string {
   const url = process.env.REDIS_URL;
@@ -44,9 +46,38 @@ leadSearchWorker.on("failed", (job, error) => {
   console.error(`[lead-search] job ${job?.id} failed:`, error.message);
 });
 
-console.log("Worker started. Listening for jobs on:", QUEUE_NAMES.leadSearch);
+// Passed into the processor so it can re-delay a job to tomorrow when the
+// sender's daily limit is already hit at send time (see
+// worker/processors/campaign-send.ts).
+const campaignSendQueue = new Queue<CampaignSendJobData>(
+  QUEUE_NAMES.campaignSend,
+  {
+    connection,
+  }
+);
+
+const campaignSendWorker = new Worker<CampaignSendJobData>(
+  QUEUE_NAMES.campaignSend,
+  async (job: Job<CampaignSendJobData>) => {
+    await processCampaignSendJob(job.data, campaignSendQueue);
+  },
+  { connection, concurrency: 3 }
+);
+
+campaignSendWorker.on("failed", (job, error) => {
+  console.error(`[campaign-send] job ${job?.id} failed:`, error.message);
+});
+
+console.log(
+  "Worker started. Listening for jobs on:",
+  QUEUE_NAMES.leadSearch,
+  "and",
+  QUEUE_NAMES.campaignSend
+);
 
 process.on("SIGTERM", async () => {
   await leadSearchWorker.close();
+  await campaignSendWorker.close();
+  await campaignSendQueue.close();
   process.exit(0);
 });

@@ -2,6 +2,7 @@
 
 import { promises as dns } from "dns";
 import { createClient } from "@/lib/supabase/server";
+import { EMAIL_FORMAT_REGEX } from "@/lib/email-format";
 import type {
   CampaignStatus,
   EmailValidationStatus,
@@ -13,7 +14,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database.types";
 
 const EMAIL_LOOKUP_CONCURRENCY = 5;
-const EMAIL_FORMAT_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 // Generic inbox addresses are real, deliverable mailboxes but a poor bet
 // for cold outreach — flagged "risky" rather than "valid", same distinction
 // most email-verification tools make.
