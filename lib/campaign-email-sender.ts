@@ -3,12 +3,17 @@
 // bundler (same reasoning as lib/queue-names.ts and lib/supabase/admin.ts).
 import nodemailer from "nodemailer";
 import { decryptCredential } from "@/lib/crypto";
+import { refreshGoogleAccessToken, sendGmailMessage } from "@/lib/google-oauth";
 
 interface SmtpCredentials {
   host: string;
   port: number;
   username: string;
   password: string;
+}
+
+interface GoogleCredentials {
+  refreshToken: string;
 }
 
 export interface SendableSenderAccount {
@@ -25,26 +30,33 @@ export interface SendCampaignEmailInput {
 }
 
 /**
- * Sends one real email through a connected sender account's own SMTP
- * credentials — used both by the worker (actual campaign sends) and by
- * the builder's "Send test email to myself" (Step 4), so a test really
- * goes out through the same path production sends will use.
- *
- * Gmail/Workspace OAuth sending was never wired up (see
- * app/onboarding/actions.ts's connectSenderEmail comment) — only "smtp"
- * accounts can actually send today.
+ * Sends one real email through a connected sender account — either its
+ * own SMTP credentials or, for a Gmail/Workspace account, the real
+ * Gmail API using the stored OAuth refresh token. Used both by the
+ * worker (actual campaign sends) and by "Send test email to myself" /
+ * the Sender Settings connect flow, so a test really goes out through
+ * the same path production sends use.
  */
 export async function sendCampaignEmail(
   senderAccount: SendableSenderAccount,
   input: SendCampaignEmailInput
 ): Promise<void> {
-  if (
-    senderAccount.provider !== "smtp" ||
-    !senderAccount.encrypted_credentials
-  ) {
-    throw new Error(
-      "This sender account can't send yet — only custom SMTP accounts are supported."
-    );
+  if (!senderAccount.encrypted_credentials) {
+    throw new Error("This sender account has no stored credentials.");
+  }
+
+  if (senderAccount.provider === "gmail") {
+    const { refreshToken } = JSON.parse(
+      decryptCredential(senderAccount.encrypted_credentials)
+    ) as GoogleCredentials;
+    const accessToken = await refreshGoogleAccessToken(refreshToken);
+    await sendGmailMessage(accessToken, {
+      from: senderAccount.email_address,
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+    });
+    return;
   }
 
   const credentials = JSON.parse(

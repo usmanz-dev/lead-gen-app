@@ -238,6 +238,8 @@ export interface Database {
           provider: SenderProvider;
           encrypted_credentials: string | null;
           warmup_status: WarmupStatus;
+          warmup_enabled: boolean;
+          warmup_started_at: string;
           daily_send_count: number;
           daily_send_limit: number;
           is_active: boolean;
@@ -251,6 +253,8 @@ export interface Database {
           provider?: SenderProvider;
           encrypted_credentials?: string | null;
           warmup_status?: WarmupStatus;
+          warmup_enabled?: boolean;
+          warmup_started_at?: string;
           daily_send_count?: number;
           daily_send_limit?: number;
           is_active?: boolean;
@@ -264,6 +268,8 @@ export interface Database {
           provider?: SenderProvider;
           encrypted_credentials?: string | null;
           warmup_status?: WarmupStatus;
+          warmup_enabled?: boolean;
+          warmup_started_at?: string;
           daily_send_count?: number;
           daily_send_limit?: number;
           is_active?: boolean;

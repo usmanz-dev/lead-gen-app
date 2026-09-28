@@ -48,10 +48,5 @@ export const NAV_ITEMS: NavItem[] = [
     icon: CreditCard,
     comingSoon: true,
   },
-  {
-    label: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-    comingSoon: true,
-  },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

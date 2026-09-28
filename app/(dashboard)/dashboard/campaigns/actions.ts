@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropic } from "@/lib/anthropic";
 import { renderTemplate } from "@/lib/merge-template";
 import { sendCampaignEmail } from "@/lib/campaign-email-sender";
+import { getEffectiveDailyLimit } from "@/lib/sender-warmup";
 import type {
   CampaignStatus,
   EmailValidationStatus,
@@ -54,7 +55,9 @@ export async function listSenderAccounts(): Promise<SenderAccountOption[]> {
 
   const { data, error } = await supabase
     .from("sender_accounts")
-    .select("id, email_address, daily_send_limit")
+    .select(
+      "id, email_address, daily_send_limit, warmup_enabled, warmup_started_at"
+    )
     .eq("organization_id", organizationId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
@@ -78,7 +81,11 @@ export async function listSenderAccounts(): Promise<SenderAccountOption[]> {
       return {
         id: account.id,
         emailAddress: account.email_address,
-        dailySendLimit: account.daily_send_limit,
+        dailySendLimit: getEffectiveDailyLimit({
+          dailySendLimit: account.daily_send_limit,
+          warmupEnabled: account.warmup_enabled,
+          warmupStartedAt: account.warmup_started_at,
+        }),
         sentToday: count ?? 0,
       };
     })
@@ -499,7 +506,7 @@ export async function launchCampaign(
 
   const { data: senderAccount } = await supabase
     .from("sender_accounts")
-    .select("id, daily_send_limit")
+    .select("id, daily_send_limit, warmup_enabled, warmup_started_at")
     .eq("id", input.senderAccountId)
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -557,7 +564,14 @@ export async function launchCampaign(
   }
 
   const rows = campaignLeads ?? [];
-  const dailyLimit = Math.max(1, senderAccount.daily_send_limit);
+  const dailyLimit = Math.max(
+    1,
+    getEffectiveDailyLimit({
+      dailySendLimit: senderAccount.daily_send_limit,
+      warmupEnabled: senderAccount.warmup_enabled,
+      warmupStartedAt: senderAccount.warmup_started_at,
+    })
+  );
   const baseDelayMs = input.scheduledAt
     ? Math.max(0, new Date(input.scheduledAt).getTime() - Date.now())
     : 0;

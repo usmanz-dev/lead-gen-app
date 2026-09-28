@@ -2,6 +2,7 @@ import type { Queue } from "bullmq";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendCampaignEmail } from "@/lib/campaign-email-sender";
 import { renderTemplate } from "@/lib/merge-template";
+import { getEffectiveDailyLimit } from "@/lib/sender-warmup";
 import type { CampaignSendJobData } from "@/lib/jobs/campaign-send";
 import type { OpportunityScoreBreakdown } from "@/lib/types/domain";
 
@@ -79,11 +80,20 @@ export async function processCampaignSendJob(
   const { data: senderAccount } = await supabase
     .from("sender_accounts")
     .select(
-      "id, email_address, provider, encrypted_credentials, daily_send_limit"
+      "id, email_address, provider, encrypted_credentials, daily_send_limit, warmup_enabled, warmup_started_at, is_active"
     )
     .eq("id", campaign.sender_account_id)
     .maybeSingle();
   if (!senderAccount) throw new Error("Sender account not found.");
+  if (!senderAccount.is_active) {
+    throw new Error("Sender account is disabled — will retry later.");
+  }
+
+  const effectiveDailyLimit = getEffectiveDailyLimit({
+    dailySendLimit: senderAccount.daily_send_limit,
+    warmupEnabled: senderAccount.warmup_enabled,
+    warmupStartedAt: senderAccount.warmup_started_at,
+  });
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -96,7 +106,7 @@ export async function processCampaignSendJob(
     .eq("campaigns.sender_account_id", senderAccount.id)
     .gte("sent_at", startOfToday.toISOString());
 
-  if ((sentToday ?? 0) >= senderAccount.daily_send_limit) {
+  if ((sentToday ?? 0) >= effectiveDailyLimit) {
     // Another campaign from this sender used up today's slots since this
     // job's delay was computed — push it to tomorrow instead of failing.
     await campaignSendQueue.add("campaign-send", data, { delay: DAY_MS });

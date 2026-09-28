@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ConnectSenderDialog } from "@/components/dashboard/connect-sender-dialog";
+import { ConnectSenderModal } from "@/components/dashboard/senders/connect-sender-modal";
 import {
   listSenderAccounts,
   type SenderAccountOption,
@@ -168,7 +168,7 @@ export function StepSender({
         </Button>
       </div>
 
-      <ConnectSenderDialog
+      <ConnectSenderModal
         organizationId={organizationId}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
